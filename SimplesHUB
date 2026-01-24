@@ -1,0 +1,153 @@
+-- Carrega a biblioteca Kavo UI
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+
+-- Cria a janela
+local Window = Library.CreateLib("Simples Hub : Tsunami Brainrot", "Ocean")
+
+-- Main Tab
+local MainTab = Window:NewTab("Main")
+local MainSection = MainTab:NewSection("God Mode")
+
+local godModeEnabled = false
+local godModeConnection = nil
+local respawnConnection = nil
+
+local function enableGodMode()
+    if not game.Players.LocalPlayer.Character then return end
+    
+    local character = game.Players.LocalPlayer.Character
+    local humanoid = character:FindFirstChild("Humanoid")
+    
+    if humanoid then
+        humanoid.Health = humanoid.MaxHealth
+        
+        if godModeConnection then
+            godModeConnection:Disconnect()
+        end
+        
+        godModeConnection = humanoid.HealthChanged:Connect(function(health)
+            if godModeEnabled then
+                humanoid.Health = humanoid.MaxHealth
+            end
+        end)
+        
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+    end
+end
+
+MainSection:NewToggle("God Mode (1-2 Ondas)", "Ativa vida infinita", function(state)
+    godModeEnabled = state
+    
+    if state then
+        game.StarterGui:SetCore("SendNotification",{
+            Title = "God Mode";
+            Text = "Ativado - Vida Infinita!";
+        })
+        
+        enableGodMode()
+        
+        if respawnConnection then
+            respawnConnection:Disconnect()
+        end
+        
+        respawnConnection = game.Players.LocalPlayer.CharacterAdded:Connect(function()
+            if godModeEnabled then
+                wait(0.1)
+                enableGodMode()
+            end
+        end)
+    else
+        game.StarterGui:SetCore("SendNotification",{
+            Title = "God Mode";
+            Text = "Desativado";
+        })
+        
+        if godModeConnection then
+            godModeConnection:Disconnect()
+            godModeConnection = nil
+        end
+        
+        if respawnConnection then
+            respawnConnection:Disconnect()
+            respawnConnection = nil
+        end
+        
+        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+            local humanoid = game.Players.LocalPlayer.Character.Humanoid
+            humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+            humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
+        end
+    end
+end)
+
+-- Auto Farm Tab
+local AutoFarmTab = Window:NewTab("Auto Farm")
+local AutoFarmSection = AutoFarmTab:NewSection("Teleport System")
+
+local savedPosition = nil
+
+AutoFarmSection:NewButton("Set Position", "Salva sua posição atual", function()
+    if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        savedPosition = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+        game.StarterGui:SetCore("SendNotification",{
+            Title = "Position Saved";
+            Text = "Posição salva com sucesso!";
+        })
+    end
+end)
+
+AutoFarmSection:NewButton("Tp Position", "Teleporta para a posição salva", function()
+    if savedPosition then
+        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local character = game.Players.LocalPlayer.Character
+            local humanoid = character:FindFirstChild("Humanoid")
+            local rootPart = character.HumanoidRootPart
+            
+            -- Protege durante o teleporte
+            if humanoid then
+                local originalHealth = humanoid.Health
+                humanoid.Health = humanoid.MaxHealth
+                
+                -- Desativa física temporariamente para evitar colisões
+                rootPart.Anchored = true
+                
+                -- Teleporta
+                rootPart.CFrame = savedPosition
+                
+                -- Aguarda um pouco antes de reativar física
+                wait(0.2)
+                
+                -- Reativa física
+                rootPart.Anchored = false
+                
+                -- Restaura vida
+                if humanoid.Health < originalHealth then
+                    humanoid.Health = originalHealth
+                end
+                
+                game.StarterGui:SetCore("SendNotification",{
+                    Title = "Teleported";
+                    Text = "Teleportado com sucesso!";
+                })
+            end
+        end
+    else
+        game.StarterGui:SetCore("SendNotification",{
+            Title = "Erro";
+            Text = "Nenhuma posição salva!";
+        })
+    end
+end)
+
+-- Dupe Tab
+local DupeTab = Window:NewTab("Dupe")
+local DupeSection = DupeTab:NewSection("Status")
+
+DupeSection:NewLabel("O Dupe Ainda Está Em Desenvolvimento")
+DupeSection:NewLabel("Será Lançado Dia 25/01/2026 às 18:30")
+
+-- Créditos Tab
+local CreditsTab = Window:NewTab("Créditos")
+local CreditsSection = CreditsTab:NewSection("Desenvolvedor")
+CreditsSection:NewLabel("Desenvolvedor : Cadu")
