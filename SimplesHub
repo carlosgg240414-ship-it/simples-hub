@@ -1,0 +1,120 @@
+local GUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/aaaa"))()
+local UI = GUI:CreateWindow("Simples Hub : Tsunami Brainrot","Desenvolvedor : Cadu")
+
+-- Main Page
+local Main = UI:addPage("Main",1,true,6)
+local godModeEnabled = false
+local godModeConnection = nil
+local respawnConnection = nil
+
+local function enableGodMode()
+    if not game.Players.LocalPlayer.Character then return end
+    
+    local character = game.Players.LocalPlayer.Character
+    local humanoid = character:FindFirstChild("Humanoid")
+    
+    if humanoid then
+        -- Mantém vida no máximo
+        humanoid.Health = humanoid.MaxHealth
+        
+        -- Monitora mudanças de vida
+        if godModeConnection then
+            godModeConnection:Disconnect()
+        end
+        
+        godModeConnection = humanoid.HealthChanged:Connect(function(health)
+            if godModeEnabled then
+                humanoid.Health = humanoid.MaxHealth
+            end
+        end)
+        
+        -- Protege contra dano direto
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+    end
+end
+
+Main:addToggle("God Mode (1-2 Ondas)",function(value)
+    godModeEnabled = value
+    
+    if value == true then
+        game.StarterGui:SetCore("SendNotification",{
+            Title = "God Mode";
+            Text = "Ativado - Vida Infinita!";
+        })
+        
+        enableGodMode()
+        
+        -- Reaplica God Mode ao respawnar
+        if respawnConnection then
+            respawnConnection:Disconnect()
+        end
+        
+        respawnConnection = game.Players.LocalPlayer.CharacterAdded:Connect(function()
+            if godModeEnabled then
+                wait(0.1)
+                enableGodMode()
+            end
+        end)
+        
+    else
+        game.StarterGui:SetCore("SendNotification",{
+            Title = "God Mode";
+            Text = "Desativado";
+        })
+        
+        -- Desativa proteções
+        if godModeConnection then
+            godModeConnection:Disconnect()
+            godModeConnection = nil
+        end
+        
+        if respawnConnection then
+            respawnConnection:Disconnect()
+            respawnConnection = nil
+        end
+        
+        -- Restaura estados normais
+        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+            local humanoid = game.Players.LocalPlayer.Character.Humanoid
+            humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+            humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
+        end
+    end
+end)
+
+-- Auto Farm Page
+local AutoFarm = UI:addPage("Auto Farm",2,false,6)
+local savedPosition = nil
+
+AutoFarm:addButton("Set Position",function()
+    if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        savedPosition = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+        game.StarterGui:SetCore("SendNotification",{
+            Title = "Position Saved";
+            Text = "Position has been set!";
+        })
+    end
+end)
+
+AutoFarm:addButton("Tp Position",function()
+    if savedPosition then
+        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = savedPosition
+            game.StarterGui:SetCore("SendNotification",{
+                Title = "Teleported";
+                Text = "Teleported to saved position!";
+            })
+        end
+    else
+        game.StarterGui:SetCore("SendNotification",{
+            Title = "Error";
+            Text = "No position saved yet!";
+        })
+    end
+end)
+
+-- Dupe Page
+local Dupe = UI:addPage("Dupe",3,false,6)
+Dupe:addLabel("Aviso","O Dupe Ainda Está Em Desenvolvimento")
+Dupe:addLabel("Lançamento","Será Lançado Dia 25/01/2026 às 18:30")
